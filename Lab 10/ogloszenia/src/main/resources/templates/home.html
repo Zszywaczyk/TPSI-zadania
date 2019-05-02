@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+</head>
+<body>
+<p>Producent: <span th:text="|${producent.id} ${producent.name}|"></span></p><br />
+<p>Model: <span th:text="|${model.id} ${model.name}|"></span></p>
+<p>Producenta <span th:text="|${model.getManufacturer().id} ${model.getManufacturer().name}|"></span></p>
+
+</body>
+</html>
