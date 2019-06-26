@@ -7,6 +7,7 @@ import wizut.tpsi.ogloszenia.web.OfferFilter;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.List;
 
@@ -17,6 +18,8 @@ public class OffersService {
 
     @PersistenceContext
     private EntityManager em;
+
+    private Integer size;
 
     public CarManufacturer getCarManufacturer(int id){
         return em.find(CarManufacturer.class, id);
@@ -164,13 +167,51 @@ public class OffersService {
         }
 
         if(!wasInIf){
-            stringBuffer.append("1=1 order by o.title");
+            stringBuffer.append("1=1 ");
+        }
+
+        if (offerFilter.getSortOption()!=null){
+            switch (offerFilter.getSortOption()){
+                case 1:
+                    stringBuffer.append("order by o.title asc ");
+                    break;
+                case 2:
+                    stringBuffer.append("order by o.title desc ");
+                    break;
+                case 3:
+                    stringBuffer.append("order by o.price asc ");
+                    break;
+                case 4:
+                    stringBuffer.append("order by o.price desc ");
+                    break;
+                case 5:
+                    stringBuffer.append("order by o.year asc ");
+                    break;
+                case 6:
+                    stringBuffer.append("order by o.year desc ");
+                    break;
+                case 7:
+                    stringBuffer.append("order by o.date asc ");
+                    break;
+                case 8:
+                    stringBuffer.append("order by o.date desc ");
+                    break;
+            }
+        }
+        else {
+            stringBuffer.append("order by o.title ");
+        }
+
+        if(!wasInIf){
             jpql = stringBuffer.toString();
             TypedQuery<Offer> query = em.createQuery(jpql, Offer.class);
+            size = query.getResultList().size();
+            query.setFirstResult((offerFilter.getActualPage()-1)*OfferFilter.OFFERS_PER_PAGE);
+            query.setMaxResults(OfferFilter.OFFERS_PER_PAGE);
             return query.getResultList();
         }
 
-        stringBuffer.append("order by o.title");
+
         jpql = stringBuffer.toString();
         TypedQuery<Offer> query = em.createQuery(jpql, Offer.class);
 
@@ -195,6 +236,11 @@ public class OffersService {
         if(offerFilter.getPriceTo()!=null) {
             query.setParameter("priceTo", offerFilter.getPriceTo());
         }
+        if(offerFilter.getActualPage()!=null){
+            size = query.getResultList().size();
+            query.setFirstResult((offerFilter.getActualPage()-1)*10);
+            query.setMaxResults(OfferFilter.OFFERS_PER_PAGE);
+        }
 
         return query.getResultList();
     }
@@ -206,7 +252,15 @@ public class OffersService {
     }
 
     public Offer saveOffer(Offer offer) {
+        offer.setDate(getOffer(offer.getId()).getDate());
         return em.merge(offer);
     }
 
+    public Integer getSize() {
+        return size;
+    }
+
+    public void setSize(Integer size) {
+        this.size = size;
+    }
 }

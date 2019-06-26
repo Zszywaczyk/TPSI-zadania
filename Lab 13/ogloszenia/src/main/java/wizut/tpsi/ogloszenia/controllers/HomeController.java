@@ -1,4 +1,4 @@
-package wizut.tpsi.ogloszenia;
+package wizut.tpsi.ogloszenia.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -8,11 +8,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import wizut.tpsi.ogloszenia.components.Login;
 import wizut.tpsi.ogloszenia.jpa.*;
 import wizut.tpsi.ogloszenia.services.OffersService;
 import wizut.tpsi.ogloszenia.web.OfferFilter;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.util.List;
 @SuppressWarnings("Duplicates")
 @Controller
@@ -21,9 +24,12 @@ public class HomeController {
     @Autowired
     OffersService offersService;
 
+    @Autowired
+    Login login;
+
     @GetMapping("/")
     public String home(Model model, OfferFilter offerFilter){
-        List<CarManufacturer> carManufacturers = offersService.getCarManufacturers();
+        /*List<CarManufacturer> carManufacturers = offersService.getCarManufacturers();
         List<CarModel> carModels = offersService.getCarModels();
 
         List<Offer> offers;
@@ -62,11 +68,19 @@ public class HomeController {
 
 
 
-        return "offersList";
+        return "offersList";*/
+
+        return "redirect:/1";
     }
 
     @GetMapping("{page}")
     public String pageHome(Model model, @PathVariable("page") Integer page, OfferFilter offerFilter){
+
+        login.loginError(model);
+
+
+        offerFilter.setActualPage(page);
+
         List<CarManufacturer> carManufacturers = offersService.getCarManufacturers();
         List<CarModel> carModels = offersService.getCarModels();
 
@@ -103,6 +117,12 @@ public class HomeController {
         model.addAttribute("carManufacturers",carManufacturers);
         model.addAttribute("carModels",carModels);
         model.addAttribute("offers", offers);
+        model.addAttribute("page", page);
+
+        Integer pageSize = (int)Math.ceil((double) offersService.getSize() /Double.valueOf(OfferFilter.OFFERS_PER_PAGE));
+        if (pageSize==0) pageSize=1;
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("filterPath", offerFilter.toString());
         return "offersList";
     }
 
@@ -119,6 +139,8 @@ public class HomeController {
         List<CarModel> carModels = offersService.getCarModels();
         List<BodyStyle> bodyStyles = offersService.getBodyStyles();
         List<FuelType> fuelTypes = offersService.getFuelTypes();
+
+        offer.setDate(LocalDate.now());
 
         model.addAttribute("carModels", carModels);
         model.addAttribute("bodyStyles", bodyStyles);
@@ -148,6 +170,7 @@ public class HomeController {
 
             return "offerForm";
         }
+        offer.setDate(LocalDate.now());
         offer = offersService.createOffer(offer);
 
         return "redirect:/offer/" + offer.getId();
